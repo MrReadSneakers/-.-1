@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -40,12 +41,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
-TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim8;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+int pwm = 0; //переменная шим, передаваемая в таймер
+int y = 0; //переменная функции контроллер, в которую записывается результат вычисления функции
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,45 +55,32 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
-static void MX_TIM6_Init(void);
+static void MX_TIM8_Init(void);
 /* USER CODE BEGIN PFP */
 
+int controller() //функция в которой формируется значение передаваемое в таймер
+{
+	y = y + 50; //тут мб любая математическая функция
+	if (y >= 990)
+	{
+		y = 0;
+	}
+	return y;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-
-	char port[5];
-	char pin[11];
-	int16_t light;
-	int16_t dark;
-
-
-void on_of_light(port, light, dark)
+/*
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim1) //колбек вызывающийся при окончании периода шим
 {
-	HAL_GPIO_TogglePin(port, GPIO_PIN_13);
-	HAL_Delay(light);
-	HAL_GPIO_TogglePin(port, GPIO_PIN_13);
-	HAL_Delay(dark);
-	HAL_GPIO_TogglePin(port, GPIO_PIN_14);
-	HAL_Delay(light);
-	HAL_GPIO_TogglePin(port, GPIO_PIN_14);
-	HAL_Delay(dark);
-	HAL_GPIO_TogglePin(port, GPIO_PIN_15);
-	HAL_Delay(light);
-	HAL_GPIO_TogglePin(port, GPIO_PIN_15);
-	HAL_Delay(dark);
-}
-
-void short_on_of_light(port, pin, light, dark)
-{
-	HAL_GPIO_TogglePin(port, pin);
-	HAL_Delay(light);
-	HAL_GPIO_TogglePin(port, pin);
-	HAL_Delay(dark);
-}
-
+	if (htim1->Instance == TIM1) //проверка на то от какого таймера пришел колббек
+	{
+		pwm = controller();
+		htim1->Instance->CCR3 = pwm;
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	}
+}*/
 /* USER CODE END 0 */
 
 /**
@@ -124,78 +113,43 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_TIM1_Init();
-  MX_TIM6_Init();
+  MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_3); //дается разрешение на работу Ш�?М таймера
+  HAL_TIM_Base_Start_IT(&htim1); //Дается разрешение на ра работц прерывений
 
-  MX_GPIO_Init();
-  MX_TIM1_Init();
-
-  HAL_TIM_Base_Start_IT(&htim1); // запуск таймера
-  HAL_TIM_Base_Start_IT(&htim6); // запуск таймера
-
-
+  HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_1); //проба сделать шим от и до самому
+  HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_2); //проба сделать шим от и до самому
+  HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_3); //проба сделать шим от и до самому
+  uint16_t i = 0;
+  volatile uint16_t j = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  	  extern condition;
-	  switch (condition)
-	  {
-	  case 0:
-		  short_on_of_light(GPIOB, GPIO_PIN_13, 1000, 1000);
-		  if (condition != 0) break;
-		  short_on_of_light(GPIOB, GPIO_PIN_14, 1000, 1000);
-		  if (condition != 0) break;
-		  short_on_of_light(GPIOB, GPIO_PIN_15, 1000, 1000);
-		  break;
-
-	  case 1:
-		  short_on_of_light(GPIOB, GPIO_PIN_13, 400, 400);
-		  if (condition != 1) break;
-		  short_on_of_light(GPIOB, GPIO_PIN_14, 400, 400);
-		  if (condition != 1) break;
-		  short_on_of_light(GPIOB, GPIO_PIN_15, 400, 400);
-		  break;
-
-	  case 2:
-		  for (int8_t i = 0; i < 10; i++)
-		  {
-			  short_on_of_light(GPIOB, GPIO_PIN_13, 30, 10);
-			  if (condition != 2) break;
-			  short_on_of_light(GPIOB, GPIO_PIN_14, 30, 10);
-			  if (condition != 2) break;
-			  short_on_of_light(GPIOB, GPIO_PIN_15, 30, 10);
-			  break;
-		  }
-		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET);
-		  HAL_Delay(400);
-		  if (condition != 2) break;
-		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-		  HAL_Delay(400);
-		  if (condition != 2) break;
-		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET);
-		  HAL_Delay(400);
-		  break;
-
-	  case 3:
-		  short_on_of_light(GPIOB, GPIO_PIN_15, 1000, 1000);
-		  if (condition != 3) break;
-		  short_on_of_light(GPIOB, GPIO_PIN_14, 1000, 1000);
-		  if (condition != 3) break;
-		  short_on_of_light(GPIOB, GPIO_PIN_13, 1000, 1000);
-		  break;
-
-	  default:
-		  condition = 0;
-
-  	  }
+	TIM8->CCR1 = 0;
+	TIM8->CCR2 = 0;
+	TIM8->CCR3 = 0;
+	HAL_Delay(500);
+	TIM8->CCR1 = 15000;
+	TIM8->CCR2 = 15000;
+	TIM8->CCR3 = 15000;
+	HAL_Delay(500);
+	TIM8->CCR1 = 30000;
+	TIM8->CCR2 = 30000;
+	TIM8->CCR3 = 30000;
+	HAL_Delay(500);
+	TIM8->CCR1 = 60000;
+	TIM8->CCR2 = 60000;
+	TIM8->CCR3 = 60000;
+	HAL_Delay(500);
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    }
+  }
   /* USER CODE END 3 */
 }
 
@@ -258,25 +212,21 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 0 */
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
   /* USER CODE BEGIN TIM1_Init 1 */
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 839;
+  htim1.Init.Prescaler = 8400-1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 50000;
+  htim1.Init.Period = 1000;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
-  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -286,47 +236,105 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM1_Init 2 */
 
   /* USER CODE END TIM1_Init 2 */
+  HAL_TIM_MspPostInit(&htim1);
 
 }
 
 /**
-  * @brief TIM6 Initialization Function
+  * @brief TIM8 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_TIM6_Init(void)
+static void MX_TIM8_Init(void)
 {
 
-  /* USER CODE BEGIN TIM6_Init 0 */
+  /* USER CODE BEGIN TIM8_Init 0 */
 
-  /* USER CODE END TIM6_Init 0 */
+  /* USER CODE END TIM8_Init 0 */
 
   TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
-  /* USER CODE BEGIN TIM6_Init 1 */
+  /* USER CODE BEGIN TIM8_Init 1 */
 
-  /* USER CODE END TIM6_Init 1 */
-  htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 84;
-  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 5000;
-  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  /* USER CODE END TIM8_Init 1 */
+  htim8.Instance = TIM8;
+  htim8.Init.Prescaler = 0;
+  htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim8.Init.Period = 60000;
+  htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim8.Init.RepetitionCounter = 0;
+  htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim8) != HAL_OK)
   {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim8, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM6_Init 2 */
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 30000;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim8, &sBreakDeadTimeConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM8_Init 2 */
 
-  /* USER CODE END TIM6_Init 2 */
+  /* USER CODE END TIM8_Init 2 */
+  HAL_TIM_MspPostInit(&htim8);
 
 }
 
@@ -386,11 +394,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -415,6 +423,24 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim1) //колбек вызывающийся при окончании периода шим
+{
+	if (htim1->Instance == TIM1) //проверка на то от какого таймера пришел колббек
+	{
+		pwm = controller();
+		htim1->Instance->CCR3 = pwm;
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	}
+}
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim->Instance == TIM8)
+	{
+		//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+	}
+}
 
 /* USER CODE END 4 */
 
