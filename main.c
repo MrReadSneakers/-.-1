@@ -40,47 +40,28 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim8;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-int pwm = 0; //переменная шим, передаваемая в таймер
-int y = 0; //переменная функции контроллер, в которую записывается результат вычисления функции
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_TIM1_Init(void);
 static void MX_TIM8_Init(void);
 /* USER CODE BEGIN PFP */
 
-int controller() //функция в которой формируется значение передаваемое в таймер
-{
-	y = y + 50; //тут мб любая математическая функция
-	if (y >= 990)
-	{
-		y = 0;
-	}
-	return y;
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/*
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim1) //колбек вызывающийся при окончании периода шим
-{
-	if (htim1->Instance == TIM1) //проверка на то от какого таймера пришел колббек
-	{
-		pwm = controller();
-		htim1->Instance->CCR3 = pwm;
-		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	}
-}*/
+
+uint8_t condition;
+
 /* USER CODE END 0 */
 
 /**
@@ -112,39 +93,133 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_TIM1_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_3); //дается разрешение на работу Ш�?М таймера
-  HAL_TIM_Base_Start_IT(&htim1); //Дается разрешение на ра работц прерывений
 
   HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_1); //проба сделать шим от и до самому
   HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_2); //проба сделать шим от и до самому
   HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_3); //проба сделать шим от и до самому
-  uint16_t i = 0;
-  volatile uint16_t j = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	TIM8->CCR1 = 0;
-	TIM8->CCR2 = 0;
-	TIM8->CCR3 = 0;
-	HAL_Delay(500);
-	TIM8->CCR1 = 15000;
-	TIM8->CCR2 = 15000;
-	TIM8->CCR3 = 15000;
-	HAL_Delay(500);
-	TIM8->CCR1 = 30000;
-	TIM8->CCR2 = 30000;
-	TIM8->CCR3 = 30000;
-	HAL_Delay(500);
-	TIM8->CCR1 = 60000;
-	TIM8->CCR2 = 60000;
-	TIM8->CCR3 = 60000;
-	HAL_Delay(500);
+	  switch (condition)
+	  {
+	  case 0:
+		  TIM8->CCR1 = 30000;
+		  HAL_Delay(1000);
+		  TIM8->CCR1 = 0;
+		  HAL_Delay(1000);
+		  if (condition != 0) break;
+		  TIM8->CCR2 = 30000;
+		  HAL_Delay(1000);
+		  TIM8->CCR2 = 0;
+		  HAL_Delay(1000);
+		  if (condition != 0) break;
+		  TIM8->CCR3 = 30000;
+		  HAL_Delay(1000);
+		  TIM8->CCR3 = 0;
+		  HAL_Delay(1000);
+		  break;
+
+	  case 1:
+		  TIM8->CCR1 = 30000;
+		  HAL_Delay(400);
+		  TIM8->CCR1 = 0;
+		  HAL_Delay(400);
+		  if (condition != 1) break;
+		  TIM8->CCR2 = 30000;
+		  HAL_Delay(400);
+		  TIM8->CCR2 = 0;
+		  HAL_Delay(400);
+		  if (condition != 1) break;
+		  TIM8->CCR3 = 30000;
+		  HAL_Delay(400);
+		  TIM8->CCR3 = 0;
+		  HAL_Delay(400);
+		  break;
+
+	  case 2:
+		  TIM8->CCR1 = 15000;
+		  HAL_Delay(400);
+		  TIM8->CCR1 = 0;
+		  HAL_Delay(400);
+		  if (condition != 2) break;
+		  TIM8->CCR2 = 15000;
+		  HAL_Delay(400);
+		  TIM8->CCR2 = 0;
+		  HAL_Delay(400);
+		  if (condition != 2) break;
+		  TIM8->CCR3 = 15000;
+		  HAL_Delay(400);
+		  TIM8->CCR3 = 0;
+		  HAL_Delay(400);
+		  break;
+
+	  case 3:
+		  TIM8->CCR1 = 60000;
+		  HAL_Delay(400);
+		  TIM8->CCR1 = 0;
+		  HAL_Delay(400);
+		  if (condition != 3) break;
+		  TIM8->CCR2 = 60000;
+		  HAL_Delay(400);
+		  TIM8->CCR2 = 0;
+		  HAL_Delay(400);
+		  if (condition != 3) break;
+		  TIM8->CCR3 = 60000;
+		  HAL_Delay(400);
+		  TIM8->CCR3 = 0;
+		  HAL_Delay(400);
+		  break;
+
+	  case 4:
+		  TIM8->CCR3 = 30000;
+		  HAL_Delay(400);
+		  TIM8->CCR3 = 0;
+		  HAL_Delay(400);
+		  if (condition != 4) break;
+		  TIM8->CCR2 = 30000;
+		  HAL_Delay(400);
+		  TIM8->CCR2 = 0;
+		  HAL_Delay(400);
+		  if (condition != 4) break;
+		  TIM8->CCR1 = 30000;
+		  HAL_Delay(400);
+		  TIM8->CCR1 = 0;
+		  HAL_Delay(400);
+		  break;
+
+	  case 5:
+		  TIM8->CCR1 = 15000;
+		  TIM8->CCR2 = 15000;
+		  TIM8->CCR3 = 15000;
+		  HAL_Delay(400);
+
+		  if (condition != 5) break;
+
+		  TIM8->CCR1 = 30000;
+		  TIM8->CCR2 = 30000;
+		  TIM8->CCR3 = 30000;
+		  HAL_Delay(400);
+
+		  if (condition != 5) break;
+
+		  TIM8->CCR1 = 60000;
+		  TIM8->CCR2 = 60000;
+		  TIM8->CCR3 = 60000;
+		  HAL_Delay(400);
+
+		  break;
+
+	  default:
+		  condition = 0;
+
+	  }
+
 
     /* USER CODE END WHILE */
 
@@ -198,71 +273,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief TIM1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM1_Init(void)
-{
-
-  /* USER CODE BEGIN TIM1_Init 0 */
-
-  /* USER CODE END TIM1_Init 0 */
-
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
-
-  /* USER CODE BEGIN TIM1_Init 1 */
-
-  /* USER CODE END TIM1_Init 1 */
-  htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 8400-1;
-  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 1000;
-  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim1.Init.RepetitionCounter = 0;
-  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
-  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
-  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 0;
-  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
-  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
-  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
-  if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM1_Init 2 */
-
-  /* USER CODE END TIM1_Init 2 */
-  HAL_TIM_MspPostInit(&htim1);
-
 }
 
 /**
@@ -396,7 +406,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
@@ -428,9 +438,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim1) //колбек вы
 {
 	if (htim1->Instance == TIM1) //проверка на то от какого таймера пришел колббек
 	{
-		pwm = controller();
-		htim1->Instance->CCR3 = pwm;
-		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	}
 }
 
